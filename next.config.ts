@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
   basePath: '/cet-prep-platfrom-demo1',
+  trailingSlash: true, // <-- ADD THIS LINE
 
   typescript: {
     ignoreBuildErrors: true,
