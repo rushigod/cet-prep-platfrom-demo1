@@ -20,6 +20,47 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, BookPlus, Timer } from 'lucide-react';
 import { getTests, getUserAttempts } from '@/lib/mock-data';
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
+import type { Test } from '@/lib/types';
+
+function TestStatusBadge({ test }: { test: Test }) {
+  const [status, setStatus] = useState<'active' | 'upcoming' | 'over' | null>(
+    null
+  );
+
+  useEffect(() => {
+    const now = new Date();
+    const isUpcoming = test.startTime > now;
+    const isOver = test.endTime < now;
+    const isActive = !isUpcoming && !isOver;
+
+    if (isActive) setStatus('active');
+    else if (isUpcoming) setStatus('upcoming');
+    else setStatus('over');
+  }, [test.startTime, test.endTime]);
+
+  return (
+    <>
+      {status === 'active' && (
+        <Badge variant="secondary" className="bg-green-100 text-green-800">
+          Active
+        </Badge>
+      )}
+      {status === 'upcoming' && <Badge variant="outline">Upcoming</Badge>}
+      {status === 'over' && <Badge variant="destructive">Finished</Badge>}
+      <Button
+        asChild
+        size="sm"
+        disabled={status !== 'active'}
+        aria-label={`Start ${test.title}`}
+      >
+        <Link href={`/test/${test.id}`}>
+          Start Test <ArrowRight />
+        </Link>
+      </Button>
+    </>
+  );
+}
 
 export default function Home() {
   const availableTests = getTests();
@@ -46,7 +87,9 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="font-headline text-2xl">Available Tests</CardTitle>
+            <CardTitle className="font-headline text-2xl">
+              Available Tests
+            </CardTitle>
             <CardDescription>
               Choose a test to start your practice session.
             </CardDescription>
@@ -55,11 +98,6 @@ export default function Home() {
             <div className="space-y-4">
               {availableTests.length > 0 ? (
                 availableTests.map((test) => {
-                  const now = new Date();
-                  const isUpcoming = test.startTime > now;
-                  const isOver = test.endTime < now;
-                  const isActive = !isUpcoming && !isOver;
-
                   return (
                     <div
                       key={test.id}
@@ -76,25 +114,7 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        {isActive && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            Active
-                          </Badge>
-                        )}
-                        {isUpcoming && (
-                          <Badge variant="outline">Upcoming</Badge>
-                        )}
-                        {isOver && <Badge variant="destructive">Finished</Badge>}
-                        <Button
-                          asChild
-                          size="sm"
-                          disabled={!isActive}
-                          aria-label={`Start ${test.title}`}
-                        >
-                          <Link href={`/test/${test.id}`}>
-                            Start Test <ArrowRight />
-                          </Link>
-                        </Button>
+                        <TestStatusBadge test={test} />
                       </div>
                     </div>
                   );
@@ -110,7 +130,9 @@ export default function Home() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="font-headline text-2xl">My Attempts</CardTitle>
+            <CardTitle className="font-headline text-2xl">
+              My Attempts
+            </CardTitle>
             <CardDescription>
               Review your past performance and track your progress.
             </CardDescription>
@@ -129,11 +151,14 @@ export default function Home() {
                   {userAttempts.map((attempt) => (
                     <TableRow key={attempt.id}>
                       <TableCell className="font-medium">
-                        {availableTests.find((t) => t.id === attempt.testId)?.title || 'Unknown Test'}
+                        {availableTests.find((t) => t.id === attempt.testId)
+                          ?.title || 'Unknown Test'}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
-                          variant={attempt.score > 50 ? 'default' : 'destructive'}
+                          variant={
+                            attempt.score > 50 ? 'default' : 'destructive'
+                          }
                           className="font-mono"
                         >
                           {attempt.score}%
@@ -148,7 +173,9 @@ export default function Home() {
               </Table>
             ) : (
               <div className="text-center py-10">
-                <p className="text-muted-foreground">You haven't attempted any tests yet.</p>
+                <p className="text-muted-foreground">
+                  You haven't attempted any tests yet.
+                </p>
                 <Button variant="link" asChild className="mt-2">
                   <Link href="#available-tests">Start your first test</Link>
                 </Button>
